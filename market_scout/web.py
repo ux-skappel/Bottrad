@@ -17,9 +17,9 @@ from .risk import RISK_PROFILES, get_profile
 from .scanner import MarketScanner, ScannerConfig
 
 
-PROJECT_ROOT = Path(__file__).resolve().parents[1]
-WEB_ROOT = PROJECT_ROOT / "web"
-DEFAULT_CACHE_DIR = PROJECT_ROOT / ".cache" / "market_scout"
+PROJECT_ROOT = Path(os.getenv("MARKET_SCOUT_ROOT", Path.cwd())).resolve()
+WEB_ROOT = Path(os.getenv("MARKET_SCOUT_WEB_ROOT", PROJECT_ROOT / "web")).resolve()
+DEFAULT_CACHE_DIR = Path(os.getenv("MARKET_SCOUT_CACHE_DIR", PROJECT_ROOT / ".cache" / "market_scout")).resolve()
 
 
 class DashboardHandler(BaseHTTPRequestHandler):
