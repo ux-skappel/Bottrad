@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: bottrad
+    runtime: docker
+    plan: free
+    repo: https://github.com/ux-skappel/Bottrad
+    branch: main
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /healthz
+    autoDeployTrigger: commit
+    envVars:
+      - key: HOST
+        value: 0.0.0.0
+      - key: PORT
+        value: 10000
+

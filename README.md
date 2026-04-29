@@ -45,7 +45,7 @@ Det viser også et Bull/Bear-regime basert på SPY, QQQ og IWM, og har en Auto-b
 
 ## Legg ut på nett
 
-Prosjektet er klargjort for Docker-deploy med [Dockerfile](./Dockerfile). Se [DEPLOY.md](./DEPLOY.md) for Render, Railway og Fly.io.
+Prosjektet er klargjort for Docker-deploy med [Dockerfile](./Dockerfile) og Render Blueprint med [render.yaml](./render.yaml). Se [DEPLOY.md](./DEPLOY.md) for Render, Railway og Fly.io.
 
 Kortversjon for lokal Docker-test:
 

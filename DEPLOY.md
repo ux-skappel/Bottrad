@@ -21,11 +21,14 @@ http://127.0.0.1:8765
 
 ## Render
 
-1. Legg prosjektet i et GitHub-repo.
-2. Gå til Render og opprett en ny Web Service.
-3. Velg repoet.
-4. Velg Docker som runtime/build type.
-5. Deploy.
+Repoet har nå `render.yaml`, så Render kan opprette tjenesten fra Blueprint.
+
+1. Gå til Render Dashboard.
+2. Velg New +.
+3. Velg Blueprint.
+4. Koble til GitHub-repoet `ux-skappel/Bottrad`.
+5. Bruk `render.yaml` i repo-roten.
+6. Trykk Deploy Blueprint.
 
 Render forventer at web services binder til `0.0.0.0` og en port, normalt `PORT`/`10000`. Dette er allerede satt opp i `Dockerfile` og `market_scout/web.py`.
 
@@ -58,4 +61,3 @@ Fly kan deploye direkte fra `Dockerfile`. Hvis Fly spør om intern port, bruk `1
 2. Sett en bedre markedsdatakilde enn Stooq hvis du vil ha hyppig oppdatering.
 3. Kjør den offentlig som analyse/paper-trading først.
 4. Ikke legg broker-nøkler i frontend eller i repoet.
-
