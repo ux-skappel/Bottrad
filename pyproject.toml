@@ -8,7 +8,9 @@ dependencies = []
 [project.scripts]
 market-scout = "market_scout.cli:main"
 
+[tool.setuptools]
+packages = ["market_scout"]
+
 [build-system]
 requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
-
