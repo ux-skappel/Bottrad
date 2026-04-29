@@ -238,7 +238,13 @@ h2 {
   font-weight: 700;
 }
 
+.control small {
+  color: #c4cec8;
+  line-height: 1.35;
+}
+
 .control input,
+.csv-upload input,
 .symbol-box textarea {
   width: 100%;
   border: 1px solid rgba(255, 255, 255, 0.13);
@@ -326,6 +332,33 @@ h2 {
 .symbol-box {
   display: grid;
   gap: 8px;
+}
+
+.csv-upload {
+  display: grid;
+  gap: 8px;
+  padding: 10px;
+  border: 1px dashed rgba(77, 216, 255, 0.34);
+  border-radius: var(--radius);
+  background: rgba(3, 5, 4, 0.58);
+}
+
+.csv-upload.hidden {
+  display: none;
+}
+
+.csv-upload span {
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.csv-upload input {
+  padding: 10px;
+}
+
+.csv-upload small {
+  color: #c4cec8;
 }
 
 .symbol-box textarea {
@@ -729,7 +762,7 @@ h2 {
 
 table {
   width: 100%;
-  min-width: 920px;
+  min-width: 1120px;
   border-collapse: collapse;
 }
 
@@ -740,6 +773,13 @@ td {
   border-bottom: 1px solid rgba(255, 255, 255, 0.09);
   text-align: left;
   white-space: nowrap;
+}
+
+td.reason-cell {
+  max-width: 360px;
+  color: #c4cec8;
+  white-space: normal;
+  line-height: 1.35;
 }
 
 th {

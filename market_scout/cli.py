@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 from pathlib import Path
 
@@ -66,6 +67,7 @@ def build_parser() -> argparse.ArgumentParser:
     scan.add_argument("--source", choices=["demo", "stooq", "csv"], default="demo")
     scan.add_argument("--universe", type=Path, help="text/CSV file with one symbol per line")
     scan.add_argument("--csv-dir", type=Path, help="directory with SYMBOL.csv files for --source csv")
+    scan.add_argument("--stooq-api-key", default=os.getenv("STOOQ_API_KEY"), help="Stooq API key")
     scan.add_argument("--cache-dir", type=Path, default=Path(".cache/market_scout"), help="cache for Stooq data")
     scan.add_argument("--json", action="store_true", help="print JSON instead of a table")
 
@@ -98,7 +100,7 @@ def build_provider(args: argparse.Namespace):
     if args.source == "demo":
         return DemoDataProvider()
     if args.source == "stooq":
-        return StooqDataProvider(cache_dir=args.cache_dir)
+        return StooqDataProvider(cache_dir=args.cache_dir, api_key=args.stooq_api_key)
     if args.source == "csv":
         if not args.csv_dir:
             raise SystemExit("--csv-dir is required when --source csv")
@@ -183,4 +185,3 @@ def money(value: float) -> str:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

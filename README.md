@@ -26,6 +26,12 @@ python3 -m market_scout scan --source stooq --universe data/universe_sample.txt 
 
 Stooq-kilden henter daglige historiske priser for amerikanske aksjer/ETF-er. For "hele markedet" bør `data/universe_sample.txt` erstattes med en full symbol-liste fra broker, børs, Nasdaq/NYSE-export eller en betalt dataleverandør.
 
+Merk: Stooq krever nå API-nøkkel for CSV-nedlasting. I dashboardet velger du `Stooq` og limer inn nøkkelen i feltet `Stooq API key`. I terminal kan du bruke:
+
+```bash
+python3 -m market_scout scan --source stooq --stooq-api-key DIN_NOKKEL --risk medium
+```
+
 ## Web-dashboard
 
 Start dashboardet:
@@ -42,6 +48,7 @@ http://127.0.0.1:8765
 
 Dashboardet lar deg velge datakilde, risikoprofil, konto-størrelse, antall treff, historikk og markedsliste uten å sitte i terminaltabellen.
 Det viser også et Bull/Bear-regime basert på SPY, QQQ og IWM, og har en Auto-bryter for periodisk refresh.
+For CSV kan du velge filer direkte i dashboardet. Bruk filnavn som `AAPL.csv`, `MSFT.csv` osv, med kolonnene `Date,Open,High,Low,Close,Volume`.
 
 ## Legg ut på nett
 

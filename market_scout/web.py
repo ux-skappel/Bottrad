@@ -11,7 +11,7 @@ from pathlib import Path
 from urllib.parse import unquote, urlparse
 
 from .cli import DEFAULT_SYMBOLS, result_to_dict
-from .data import CsvDataProvider, DataError, DemoDataProvider, MarketDataProvider, StooqDataProvider
+from .data import CsvDataProvider, DataError, DemoDataProvider, MarketDataProvider, StooqDataProvider, UploadedCsvDataProvider
 from .indicators import percent_change, previous_sma, rsi, sma
 from .risk import RISK_PROFILES, get_profile
 from .scanner import MarketScanner, ScannerConfig
@@ -107,7 +107,7 @@ class DashboardHandler(BaseHTTPRequestHandler):
         size = int(self.headers.get("Content-Length", "0"))
         if size <= 0:
             return {}
-        if size > 250_000:
+        if size > 5_000_000:
             raise ValueError("Request body is too large")
         raw = self.rfile.read(size).decode("utf-8")
         try:
@@ -178,16 +178,21 @@ def build_provider(source: str, payload: dict):
     if source == "demo":
         return DemoDataProvider()
     if source == "stooq":
-        return StooqDataProvider(cache_dir=DEFAULT_CACHE_DIR)
+        api_key = str(payload.get("stooqApiKey") or os.getenv("STOOQ_API_KEY", "")).strip()
+        return StooqDataProvider(cache_dir=DEFAULT_CACHE_DIR, api_key=api_key)
+    csv_files = payload.get("csvFiles")
+    if isinstance(csv_files, dict) and csv_files:
+        return UploadedCsvDataProvider({str(name): str(content) for name, content in csv_files.items()})
     csv_dir = payload.get("csvDir")
     if not csv_dir:
-        raise ValueError("csvDir is required for csv source")
+        raise ValueError("Choose CSV files or enter csvDir when source is csv")
     return CsvDataProvider(Path(str(csv_dir)).expanduser())
 
 
 def build_summary(results: list[dict]) -> dict:
     buys = [item for item in results if item["signal"] == "BUY"]
     watches = [item for item in results if item["signal"] == "WATCH"]
+    skips = [item for item in results if item["signal"] == "SKIP"]
     plans = [item["position_plan"] for item in results if item.get("position_plan")]
     total_position_value = sum(plan["position_value"] for plan in plans)
     total_risk = sum(plan["capital_at_risk"] for plan in plans)
@@ -195,6 +200,7 @@ def build_summary(results: list[dict]) -> dict:
     return {
         "buyCount": len(buys),
         "watchCount": len(watches),
+        "skipCount": len(skips),
         "averageScore": round(average_score, 1),
         "totalPositionValue": round(total_position_value, 2),
         "totalCapitalAtRisk": round(total_risk, 2),

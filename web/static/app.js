@@ -18,6 +18,11 @@ const elements = {
   symbols: document.querySelector("#symbolsInput"),
   csvDir: document.querySelector("#csvDirInput"),
   csvPathControl: document.querySelector("#csvPathControl"),
+  csvUploadControl: document.querySelector("#csvUploadControl"),
+  csvFileInput: document.querySelector("#csvFileInput"),
+  csvFileSummary: document.querySelector("#csvFileSummary"),
+  stooqKeyControl: document.querySelector("#stooqKeyControl"),
+  stooqApiKey: document.querySelector("#stooqApiKeyInput"),
   resetSymbols: document.querySelector("#resetSymbols"),
   scanButton: document.querySelector("#scanButton"),
   autoRefresh: document.querySelector("#autoRefreshInput"),
@@ -76,7 +81,7 @@ function bindControls() {
     if (!button) return;
     state.source = button.dataset.source;
     selectButton(elements.sourceGroup, "source", state.source);
-    elements.csvPathControl.classList.toggle("hidden", state.source !== "csv");
+    updateSourceControls();
   });
 
   elements.riskGroup.addEventListener("click", (event) => {
@@ -93,6 +98,7 @@ function bindControls() {
   elements.scanButton.addEventListener("click", runScan);
   elements.autoRefresh.addEventListener("change", configureAutoRefresh);
   elements.refreshInterval.addEventListener("change", configureAutoRefresh);
+  elements.csvFileInput.addEventListener("change", syncSymbolsFromCsvFiles);
 }
 
 async function runScan() {
@@ -108,6 +114,8 @@ async function runScan() {
     bars: Number(elements.bars.value),
     symbols: elements.symbols.value,
     csvDir: elements.csvDir.value.trim(),
+    csvFiles: await readCsvFiles(),
+    stooqApiKey: elements.stooqApiKey.value.trim(),
   };
 
   try {
@@ -127,6 +135,32 @@ async function runScan() {
   } finally {
     setLoading(false);
   }
+}
+
+function updateSourceControls() {
+  const isCsv = state.source === "csv";
+  const isStooq = state.source === "stooq";
+  elements.csvPathControl.classList.toggle("hidden", !isCsv);
+  elements.csvUploadControl.classList.toggle("hidden", !isCsv);
+  elements.stooqKeyControl.classList.toggle("hidden", !isStooq);
+}
+
+function syncSymbolsFromCsvFiles() {
+  const files = Array.from(elements.csvFileInput.files || []);
+  if (!files.length) {
+    elements.csvFileSummary.textContent = "Velg filer som AAPL.csv, MSFT.csv osv.";
+    return;
+  }
+  const symbols = files.map((file) => file.name.replace(/\.[^.]+$/, "").toUpperCase());
+  elements.csvFileSummary.textContent = `${files.length} CSV-fil(er): ${symbols.join(", ")}`;
+  elements.symbols.value = symbols.join("\n");
+}
+
+async function readCsvFiles() {
+  if (state.source !== "csv") return {};
+  const files = Array.from(elements.csvFileInput.files || []);
+  const entries = await Promise.all(files.map(async (file) => [file.name, await file.text()]));
+  return Object.fromEntries(entries);
 }
 
 function setLoading(isLoading) {
@@ -210,7 +244,7 @@ function setLeaderMetrics(leader) {
 
 function renderTable(results) {
   if (!results.length) {
-    elements.resultsBody.innerHTML = `<tr><td colspan="9" class="empty-cell">Ingen data</td></tr>`;
+    elements.resultsBody.innerHTML = `<tr><td colspan="10" class="empty-cell">Ingen data</td></tr>`;
     return;
   }
 
@@ -231,6 +265,7 @@ function renderTable(results) {
         <td>${plan ? plan.shares : "-"}</td>
         <td>${plan ? formatNumber(plan.stop) : "-"}</td>
         <td>${plan ? formatNumber(plan.target) : "-"}</td>
+        <td class="reason-cell">${escapeHtml((item.reasons || []).slice(0, 2).join(" · ") || "-")}</td>
       </tr>
     `;
   }).join("");
@@ -330,6 +365,7 @@ async function init() {
   initMarketFlow();
   bindControls();
   await loadDefaults();
+  updateSourceControls();
   await runScan();
 }
 

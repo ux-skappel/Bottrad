@@ -70,7 +70,19 @@
               <span>CSV-mappe</span>
               <input id="csvDirInput" type="text" placeholder="/path/to/csv">
             </label>
+
+            <label class="control stooq-key hidden" id="stooqKeyControl">
+              <span>Stooq API key</span>
+              <input id="stooqApiKeyInput" type="password" placeholder="lim inn nøkkel">
+              <small>Stooq krever nøkkel for CSV-nedlasting.</small>
+            </label>
           </div>
+
+          <label class="csv-upload hidden" id="csvUploadControl">
+            <span>CSV-filer</span>
+            <input id="csvFileInput" type="file" accept=".csv,text/csv" multiple>
+            <small id="csvFileSummary">Velg filer som AAPL.csv, MSFT.csv osv.</small>
+          </label>
 
           <label class="symbol-box">
             <span>Markedsliste</span>
@@ -188,11 +200,12 @@
                   <th>Qty</th>
                   <th>Stop</th>
                   <th>Target</th>
+                  <th>Hvorfor</th>
                 </tr>
               </thead>
               <tbody id="resultsBody">
                 <tr>
-                  <td colspan="9" class="empty-cell">Ingen data ennå</td>
+                  <td colspan="10" class="empty-cell">Ingen data ennå</td>
                 </tr>
               </tbody>
             </table>

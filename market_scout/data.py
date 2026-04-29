@@ -37,9 +37,22 @@ class CsvDataProvider(MarketDataProvider):
         return data[-bars:]
 
 
+class UploadedCsvDataProvider(MarketDataProvider):
+    def __init__(self, files: dict[str, str]):
+        self.data_by_symbol = build_uploaded_csv_map(files)
+
+    def history(self, symbol: str, *, bars: int) -> list[Bar]:
+        key = symbol.upper()
+        if key not in self.data_by_symbol:
+            available = ", ".join(sorted(self.data_by_symbol)) or "none"
+            raise DataError(f"No uploaded CSV found for {symbol}. Available: {available}")
+        return self.data_by_symbol[key][-bars:]
+
+
 class StooqDataProvider(MarketDataProvider):
-    def __init__(self, cache_dir: Path | None = None):
+    def __init__(self, cache_dir: Path | None = None, api_key: str | None = None):
         self.cache_dir = cache_dir
+        self.api_key = api_key.strip() if api_key else None
         if self.cache_dir:
             self.cache_dir.mkdir(parents=True, exist_ok=True)
 
@@ -57,6 +70,9 @@ class StooqDataProvider(MarketDataProvider):
         except OSError as exc:
             raise DataError(f"Could not fetch {symbol} from Stooq: {exc}") from exc
 
+        if "get your apikey" in body.lower() or "apikey=" in body.lower():
+            raise DataError("Stooq requires an API key. Add it in the Stooq API key field.")
+
         rows = list(csv.DictReader(body.splitlines()))
         if not rows or "Close" not in rows[0]:
             raise DataError(f"Stooq returned no daily data for {symbol}")
@@ -72,12 +88,14 @@ class StooqDataProvider(MarketDataProvider):
         digest = hashlib.sha1(symbol.lower().encode("utf-8")).hexdigest()[:12]
         return self.cache_dir / f"{symbol.upper()}-{digest}.csv"
 
-    @staticmethod
-    def _url(symbol: str) -> str:
+    def _url(self, symbol: str) -> str:
         normalized = symbol.strip().lower()
         if "." not in normalized:
             normalized = f"{normalized}.us"
-        query = urllib.parse.urlencode({"s": normalized, "i": "d"})
+        query_data = {"s": normalized, "i": "d"}
+        if self.api_key:
+            query_data["apikey"] = self.api_key
+        query = urllib.parse.urlencode(query_data)
         return f"https://stooq.com/q/d/l/?{query}"
 
 
@@ -151,10 +169,22 @@ def parse_csv_rows(rows: list[dict[str, str]]) -> list[Bar]:
     return [bar for bar in parsed if bar.close > 0 and bar.high > 0 and bar.low > 0]
 
 
+def build_uploaded_csv_map(files: dict[str, str]) -> dict[str, list[Bar]]:
+    data_by_symbol: dict[str, list[Bar]] = {}
+    for filename, content in files.items():
+        symbol = Path(filename).stem.strip().upper()
+        if not symbol:
+            continue
+        rows = list(csv.DictReader(content.splitlines()))
+        bars = parse_csv_rows(rows)
+        if bars:
+            data_by_symbol[symbol] = bars
+    return data_by_symbol
+
+
 def write_bars_csv(path: Path, bars: list[Bar]) -> None:
     with path.open("w", encoding="utf-8", newline="") as handle:
         writer = csv.writer(handle)
         writer.writerow(["Date", "Open", "High", "Low", "Close", "Volume"])
         for bar in bars:
             writer.writerow([bar.date.isoformat(), bar.open, bar.high, bar.low, bar.close, bar.volume])
-
