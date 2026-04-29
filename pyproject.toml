@@ -1,0 +1,14 @@
+[project]
+name = "market-scout-bot"
+version = "0.1.0"
+description = "A local market scanner that ranks buy opportunities with configurable risk profiles."
+requires-python = ">=3.10"
+dependencies = []
+
+[project.scripts]
+market-scout = "market_scout.cli:main"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+

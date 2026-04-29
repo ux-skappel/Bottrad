@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="no">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Market Scout Control</title>
+    <link rel="stylesheet" href="/static/styles.css">
+  </head>
+  <body>
+    <canvas id="marketFlow" aria-hidden="true"></canvas>
+    <div class="shell">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">Python engine online</p>
+          <h1>Market Scout</h1>
+        </div>
+        <div class="status-stack" aria-label="Status">
+          <span class="status-chip good">Paper mode</span>
+          <span class="status-chip" id="autoStatus">Auto: av</span>
+          <span class="status-chip" id="clock">--:--</span>
+        </div>
+      </header>
+
+      <main class="dashboard">
+        <section class="control-panel" aria-label="Scanner controls">
+          <div class="panel-head">
+            <div>
+              <span class="section-kicker">Scan cockpit</span>
+              <h2>Finn kjøpsmuligheter</h2>
+            </div>
+            <button class="ghost-button" id="resetSymbols" type="button" title="Tilbakestill symboler">Reset</button>
+          </div>
+
+          <div class="control-grid">
+            <label class="control">
+              <span>Datakilde</span>
+              <div class="segmented" id="sourceGroup">
+                <button class="segment active" type="button" data-source="demo">Demo</button>
+                <button class="segment" type="button" data-source="stooq">Stooq</button>
+                <button class="segment" type="button" data-source="csv">CSV</button>
+              </div>
+            </label>
+
+            <label class="control">
+              <span>Risiko</span>
+              <div class="risk-rail" id="riskGroup">
+                <button class="risk-dot" type="button" data-risk="low"><b>Lav</b><small>0.5%</small></button>
+                <button class="risk-dot active" type="button" data-risk="medium"><b>Medium</b><small>1.0%</small></button>
+                <button class="risk-dot" type="button" data-risk="high"><b>Høy</b><small>2.0%</small></button>
+                <button class="risk-dot" type="button" data-risk="very_high"><b>Turbo</b><small>4.0%</small></button>
+              </div>
+            </label>
+
+            <label class="control">
+              <span>Konto</span>
+              <input id="accountInput" type="number" min="100" step="1000" value="100000">
+            </label>
+
+            <label class="control">
+              <span>Treff</span>
+              <input id="topInput" type="number" min="1" max="100" value="15">
+            </label>
+
+            <label class="control">
+              <span>Historikk</span>
+              <input id="barsInput" type="number" min="80" max="1500" value="220">
+            </label>
+
+            <label class="control csv-path hidden" id="csvPathControl">
+              <span>CSV-mappe</span>
+              <input id="csvDirInput" type="text" placeholder="/path/to/csv">
+            </label>
+          </div>
+
+          <label class="symbol-box">
+            <span>Markedsliste</span>
+            <textarea id="symbolsInput" spellcheck="false"></textarea>
+          </label>
+
+          <button class="scan-button" id="scanButton" type="button">
+            <span class="button-icon">↯</span>
+            <span>Kjør scan</span>
+          </button>
+
+          <div class="auto-controls">
+            <label class="switch-control">
+              <input id="autoRefreshInput" type="checkbox">
+              <span class="switch-track"></span>
+              <strong>Auto</strong>
+            </label>
+            <select id="refreshIntervalSelect" aria-label="Auto refresh interval">
+              <option value="60">60s</option>
+              <option value="180">3m</option>
+              <option value="300">5m</option>
+              <option value="900">15m</option>
+            </select>
+          </div>
+          <p class="error-line" id="errorLine" role="alert"></p>
+        </section>
+
+        <section class="hero-panel" aria-label="Top candidate">
+          <div class="pulse-strip"></div>
+          <div class="leader-layout">
+            <div>
+              <span class="section-kicker">Beste kandidat</span>
+              <h2 id="leaderSymbol">Ingen scan ennå</h2>
+              <p id="leaderReason">Signalstrømmen står klar.</p>
+            </div>
+            <div class="score-ring" id="leaderScore" style="--score:0">
+              <span>0</span>
+            </div>
+          </div>
+          <div class="leader-metrics">
+            <div>
+              <span>Signal</span>
+              <strong id="leaderSignal">-</strong>
+            </div>
+            <div>
+              <span>Entry</span>
+              <strong id="leaderEntry">-</strong>
+            </div>
+            <div>
+              <span>Stop</span>
+              <strong id="leaderStop">-</strong>
+            </div>
+            <div>
+              <span>Target</span>
+              <strong id="leaderTarget">-</strong>
+            </div>
+          </div>
+        </section>
+
+        <section class="regime-panel" id="regimePanel" aria-label="Bull Bear regime">
+          <div class="panel-head">
+            <div>
+              <span class="section-kicker">Bull / Bear</span>
+              <h2 id="regimeState">Venter</h2>
+            </div>
+            <strong id="regimeBias">-</strong>
+          </div>
+          <div class="regime-meter" style="--regime-position:50">
+            <span>Bear</span>
+            <i id="regimeNeedle"></i>
+            <span>Bull</span>
+          </div>
+          <p id="regimeReason">Markedsregime beregnes fra SPY, QQQ og IWM.</p>
+          <div class="benchmark-row" id="benchmarkRow"></div>
+        </section>
+
+        <section class="stats-grid" aria-label="Scan summary">
+          <article class="stat-card accent-green">
+            <span>BUY</span>
+            <strong id="buyCount">0</strong>
+          </article>
+          <article class="stat-card accent-amber">
+            <span>WATCH</span>
+            <strong id="watchCount">0</strong>
+          </article>
+          <article class="stat-card accent-cyan">
+            <span>Snittscore</span>
+            <strong id="avgScore">0</strong>
+          </article>
+          <article class="stat-card accent-coral">
+            <span>Kapital i spill</span>
+            <strong id="riskCapital">0</strong>
+          </article>
+        </section>
+
+        <section class="results-panel" aria-label="Scan results">
+          <div class="panel-head">
+            <div>
+              <span class="section-kicker">Signal matrix</span>
+              <h2>Rangerte kandidater</h2>
+            </div>
+            <span class="scan-time" id="scanTime">Ikke kjørt</span>
+          </div>
+
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Symbol</th>
+                  <th>Signal</th>
+                  <th>Score</th>
+                  <th>Pris</th>
+                  <th>RSI</th>
+                  <th>ATR%</th>
+                  <th>Qty</th>
+                  <th>Stop</th>
+                  <th>Target</th>
+                </tr>
+              </thead>
+              <tbody id="resultsBody">
+                <tr>
+                  <td colspan="9" class="empty-cell">Ingen data ennå</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script src="/static/app.js"></script>
+  </body>
+</html>

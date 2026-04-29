@@ -1,0 +1,25 @@
+# Replace this with a full universe export from your broker/data provider.
+# One symbol per line. For Stooq US equities, plain tickers are mapped to .us.
+AAPL
+MSFT
+NVDA
+AMZN
+META
+GOOGL
+TSLA
+JPM
+XOM
+UNH
+V
+MA
+AVGO
+LLY
+COST
+NFLX
+AMD
+CRM
+ADBE
+SPY
+QQQ
+IWM
+
